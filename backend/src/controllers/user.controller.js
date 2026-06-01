@@ -312,6 +312,8 @@ const updateUserCoverImage = asynchandler(async (req, res) => {
 })
 
 const getUserChannelProfile = asynchandler(async(req, res) => {
+  console.log("cotroller reached");
+  
   const {username} = req.params;
 
   if(!username?.trim()){
