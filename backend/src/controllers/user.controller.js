@@ -112,7 +112,7 @@ const loginUser = asynchandler(async(req, res) => {
   })
 
   if(!user){
-    throw new ApiError(400, "User does not exist!")
+    throw new ApiError(404, "User does not exist!")
   }
 
   const isPasswordValid = await user.isPasswordCorrect(password);
@@ -127,11 +127,12 @@ const loginUser = asynchandler(async(req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true
+    secure: true,
+    sameSite:"none"
   }
 
-  // console.log("ACCESS:", accessToken);
-  // console.log("REFRESH:", refreshToken);
+  console.log("ACCESS:", accessToken);
+  console.log("REFRESH:", refreshToken);
 
   return res
   .status(200)
@@ -312,7 +313,7 @@ const updateUserCoverImage = asynchandler(async (req, res) => {
 })
 
 const getUserChannelProfile = asynchandler(async(req, res) => {
-  console.log("cotroller reached");
+  console.log("controller reached");
   
   const {username} = req.params;
 
