@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Post } from "../models/post.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -45,13 +46,73 @@ const getAllPost = asynchandler(async (req, res) => {
 })
 
 const getUserPosts = asynchandler(async(req, res) => {
+  console.log("NEW GET USER POSTS CONTROLLER RUNNING");
   const {userId} = req.params;
 
-  const posts = (await Post.find({owner: userId}).populate("owner", "username avatar"))
+  const posts = await Post.aggregate([
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId)
+      }
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "post",
+        as: "likes"
+      }
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "post",
+        as: "comments"
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner"
+      }
+    },
+    {
+      $unwind: "$owner"
+    },
+    {
+      $addFields: {
+        likesCount: {
+          $size: "$likes"
+        },
+        commentsCount: {
+          $size: "$comments"
+        }
+      }
+    },
+    {
+      $project: {
+        caption: 1,
+        media: 1,
+        mediaType: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        likesCount: 1,
+        commentsCount: 1,
+        owner: {
+          _id: "$owner._id",
+          username: "$owner.username",
+        }
+      }
+    }
+    ]);
+    console.log("final posts", posts);
 
-  return res
-  .status(200)
-  .json(new ApiResponse( 200 ,{totalPosts: posts.length}, posts))
+    return res
+    .status(200)
+    .json(new ApiResponse( 200 ,{totalPosts: posts.length}, posts))
 })
 
 const deletePost = asynchandler(async(req, res) => {
@@ -77,9 +138,9 @@ const deletePost = asynchandler(async(req, res) => {
 const editPost = asynchandler( async(req, res) => { 
   console.log("BODY:", req.body)
 
-console.log("FILE:", req.file)
+  console.log("FILE:", req.file)
 
-console.log("PARAMS:", req.params)
+  console.log("PARAMS:", req.params)
 
   const {postId} = req.params;
 
@@ -130,10 +191,7 @@ console.log("PARAMS:", req.params)
       new: true
     }
   )
-  
   console.log(updatedPost);
-  
-
   return res
   .status(200)
   .json(new ApiResponse(200, updatedPost,"Post updated successfully!" ))
