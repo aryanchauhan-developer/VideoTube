@@ -115,6 +115,68 @@ const getUserPosts = asynchandler(async(req, res) => {
     .json(new ApiResponse( 200 ,{totalPosts: posts.length}, posts))
 })
 
+const getPostById = asynchandler(async (req, res) => {
+  const { postId } = req.params;
+
+  const post = await Post.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(postId)
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner"
+      }
+    },
+    {
+      $unwind: "$owner"
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "post",
+        as: "likes"
+      }
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "post",
+        as: "comments"
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "comments.owner",
+        foreignField: "_id",
+        as: "commentOwners"
+      }
+    },
+    {
+      $addFields: {
+        likesCount: {
+          $size: "$likes"
+        },
+        commentsCount: {
+          $size: "$comments"
+        }
+      }
+    }
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(200, post[0], "Post fetched successfully")
+  );
+});
+
+
 const deletePost = asynchandler(async(req, res) => {
   const {postId} = req.params;
 
@@ -202,5 +264,6 @@ export {
   getAllPost,
   getUserPosts,
   deletePost,
-  editPost
+  editPost,
+  getPostById
 }

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {upload} from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { createPost, editPost , deletePost, getAllPost, getUserPosts } from "../controllers/post.controller.js";
+import { createPost, editPost , deletePost, getAllPost, getUserPosts, getPostById } from "../controllers/post.controller.js";
 
 const router = Router();
 
@@ -20,6 +20,8 @@ router.route("/edit/:postId").patch(
   upload.single("media"),
   editPost
 )
+
+router.route("/:postId").get(verifyJWT, getPostById)
 
 router.route("/:postId").delete(
   verifyJWT,
