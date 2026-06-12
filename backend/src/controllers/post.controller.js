@@ -87,6 +87,7 @@ const getAllPost = asynchandler(async (req, res) => {
         owner: {
           _id: "$owner._id",
           username: "$owner.username",
+          avatar: "$owner.avatar"
         }
       }
     },
@@ -97,7 +98,7 @@ const getAllPost = asynchandler(async (req, res) => {
     }
   ])
 
-  
+
   return res
   .status(200)
   .json(new ApiResponse( 200 ,{totalPosts: posts.length}, posts))

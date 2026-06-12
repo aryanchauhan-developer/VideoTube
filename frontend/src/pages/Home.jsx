@@ -22,6 +22,8 @@ function Home() {
   }
 
   const handleLike = async(posId) => {
+    console.log("click");
+    
     try{
       const token = localStorage.getItem("accessToken");
 
@@ -81,9 +83,8 @@ function Home() {
             />
           )}
 
-          <div className="p-4">
+          <div className="p-4" key={post._id}>
             <p className="text-gray-800">{post.caption}</p>
-            <pre>{JSON.stringify(post, null, 2)}</pre>
             <div className="flex gap-6 mt-4 text-lg">
               <span onClick={() => handleLike(post._id)} >❤️ {post.likesCount ?? 0}</span>
               <span>💬 {post.commentsCount ?? 0}</span>
