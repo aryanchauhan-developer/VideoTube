@@ -38,8 +38,66 @@ const createPost = asynchandler(async (req, res) => {
 })
 
 const getAllPost = asynchandler(async (req, res) => {
-  const posts = await Post.find().populate("owner", "username avatar").sort({ createdAt: -1 })
+  const posts = await Post.aggregate([
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "post",
+        as: "likes"
+      }
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "post",
+        as: "comments"
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner"
+      }
+    },
+    {
+      $unwind: "$owner"
+    },
+    {
+      $addFields: {
+        likesCount: {
+          $size: "$likes"
+        },
+        commentsCount: {
+          $size: "$comments"
+        }
+      }
+    },
+    {
+      $project: {
+        caption: 1,
+        media: 1,
+        mediaType: 1,
+        createdAt: 1,
+        likesCount: 1,
+        commentsCount: 1,
+        owner: {
+          _id: "$owner._id",
+          username: "$owner.username",
+        }
+      }
+    },
+    {
+      $sort: {
+        createdAt: -1
+      }
+    }
+  ])
 
+  
   return res
   .status(200)
   .json(new ApiResponse( 200 ,{totalPosts: posts.length}, posts))
